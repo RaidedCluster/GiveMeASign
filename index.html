@@ -104,11 +104,28 @@
         9: "𝣎𝪜",
       };
 
+      const VERTICAL_PUNCTUATION_OVERRIDES = {
+        '.': '𝪈',
+        ',': '𝪇',
+        ':': '𝪊',
+        ';': '𝪉',
+        '(': '𝪋',
+        ')': '𝪋𝪤',
+      };
+
       function textToFingerspell(text, mode) {
+        if (!text || text.trim() === "") { // Handle empty or whitespace-only input
+          return "";
+        }
         if (mode === "vertical") {
           return text
             .split("")
-            .map((c) => ASL_FINGERSPELL_DICT[c.toUpperCase()] || c)
+            .map((c) => {
+              if (VERTICAL_PUNCTUATION_OVERRIDES.hasOwnProperty(c)) {
+                return VERTICAL_PUNCTUATION_OVERRIDES[c];
+              }
+              return ASL_FINGERSPELL_DICT[c.toUpperCase()] || c;
+            })
             .join("\n");
         }
 
@@ -162,9 +179,19 @@
       }
 
       function render(mode) {
-        const text = document.getElementById("inputText").value;
-        const result = textToFingerspell(text, mode);
-        document.getElementById("output").textContent = result;
+        const inputText = document.getElementById("inputText").value;
+        const lines = inputText.split('\n'); // Split input by actual newline characters
+        const outputSegments = [];
+
+        for (const line of lines) {
+          const fingerspelledLine = textToFingerspell(line, mode);
+          // Only add non-empty results to our list of segments to be joined.
+          if (fingerspelledLine !== "") {
+            outputSegments.push(fingerspelledLine);
+          }
+        }
+        // Join the processed, non-empty segments with two newlines as a separator.
+        document.getElementById("output").textContent = outputSegments.join("\n\n");
       }
     </script>
   </body>

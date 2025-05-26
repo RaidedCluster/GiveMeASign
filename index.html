@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ASL Fingerspelling</title>
+  <style>
+    @font-face {
+      font-family: 'Noto Sans SignWriting';
+      src: url('https://fonts.gstatic.com/ea/notosanssignwriting/v6/NotoSansSignWriting-Regular.woff2') format('woff2');
+    }
+
+    body {
+      background-color: #0000CC;
+      color: #FFFF00;
+      font-family: 'Noto Sans SignWriting', sans-serif;
+      padding: 2rem;
+    }
+
+    textarea {
+      width: 100%;
+      height: 100px;
+      font-size: 1.2rem;
+      padding: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    button {
+      margin-right: 1rem;
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      background-color: #FFFF00;
+      color: #0000CC;
+      border: none;
+      cursor: pointer;
+    }
+
+    pre {
+      white-space: pre-wrap;
+      font-size: 2rem;
+      line-height: 2.5rem;
+      margin-top: 1rem;
+      word-wrap: break-word;
+    }
+  </style>
+</head>
+<body>
+  <h1>ASL Fingerspelling</h1>
+  <textarea id="inputText" placeholder="Type text here..."></textarea><br/>
+  <button onclick="render('horizontal')">Horizontal</button>
+  <button onclick="render('vertical')">Vertical</button>
+  <pre id="output"></pre>
+
+  <script>
+    const ASL_FINGERSPELL_DICT = {
+      'A': '𝣷𝪜',
+      'B': '𝡇𝪜',
+      'C': '𝡭𝪜',
+      'D': '𝠁𝪜',
+      'E': '𝡊𝪜',
+      'F': '𝣎𝪜',
+      'G': '𝣰',
+      'H': '𝠕𝪢',
+      'I': '𝢒𝪜',
+      'J': '𝦢𝪬\n𝢒𝪜',
+      'K': '𝡀𝪜',
+      'L': '𝣜𝪜',
+      'M': '𝢍𝪜',
+      'N': '𝠙𝪜',
+      'O': '𝡶𝪜',
+      'P': '𝡀𝪜𝪡',
+      'Q': '𝣱𝪜𝪡',
+      'R': '𝠚𝪜',
+      'S': '𝤃𝪜',
+      'T': '𝣻𝪜',
+      'U': '𝠕𝪜',
+      'V': '𝠎𝪜',
+      'W': '𝢇𝪜',
+      'X': '𝠆𝪜',
+      'Y': '𝢚𝪜',
+      'Z': ' 𝥅𝪪\n𝠀𝪜',
+      '.': '𝪈𝪢',
+      ',': '𝪇𝪢',
+      ':': '𝪊𝪢',
+      ';': '𝪉𝪢',
+      '(': '𝪋𝪢',
+      ')': '𝪋𝪦',
+      '?': '𝦟𝪝𝪬\n𝠀𝪜',
+      '0': '𝡶𝪜',
+      '1': '𝠀𝪜',
+      '2': '𝠎𝪜',
+      '3': '𝠞𝪜',
+      '4': '𝡄𝪜',
+      '5': '𝡌𝪜',
+      '6': '𝢇𝪜',
+      '7': '𝢥𝪜',
+      '8': '𝢻𝪜',
+      '9': '𝣎𝪜',
+    };
+
+    function textToFingerspell(text, mode) {
+      if (mode === "vertical") {
+        return text.split('').map(c => ASL_FINGERSPELL_DICT[c.toUpperCase()] || c).join('\n');
+      }
+
+      const topLine = [], botLine = [];
+
+      for (const ch of text) {
+        const sym = ASL_FINGERSPELL_DICT[ch.toUpperCase()] || ch;
+        const parts = sym.split('\n');
+        if (parts.length === 1) {
+          botLine.push(parts[0]);
+          topLine.push(' '.repeat(parts[0].length));
+        } else {
+          topLine.push(parts[0]);
+          botLine.push(parts[1]);
+        }
+      }
+
+      return topLine.join('') + '\n' + botLine.join('');
+    }
+
+    function render(mode) {
+      const text = document.getElementById('inputText').value;
+      const result = textToFingerspell(text, mode);
+      document.getElementById('output').textContent = result;
+    }
+  </script>
+</body>
+</html>

@@ -1,130 +1,171 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>ASL Fingerspelling</title>
-  <style>
-    @font-face {
-      font-family: 'Noto Sans SignWriting';
-      src: url('https://fonts.gstatic.com/ea/notosanssignwriting/v6/NotoSansSignWriting-Regular.woff2') format('woff2');
-    }
-
-    body {
-      background-color: #0000CC;
-      color: #FFFF00;
-      font-family: 'Noto Sans SignWriting', sans-serif;
-      padding: 2rem;
-    }
-
-    textarea {
-      width: 100%;
-      height: 100px;
-      font-size: 1.2rem;
-      padding: 0.5rem;
-      margin-bottom: 1rem;
-    }
-
-    button {
-      margin-right: 1rem;
-      padding: 0.5rem 1rem;
-      font-size: 1rem;
-      background-color: #FFFF00;
-      color: #0000CC;
-      border: none;
-      cursor: pointer;
-    }
-
-    pre {
-      white-space: pre-wrap;
-      font-size: 2rem;
-      line-height: 2.5rem;
-      margin-top: 1rem;
-      word-wrap: break-word;
-    }
-  </style>
-</head>
-<body>
-  <h1>ASL Fingerspelling</h1>
-  <textarea id="inputText" placeholder="Type text here..."></textarea><br/>
-  <button onclick="render('horizontal')">Horizontal</button>
-  <button onclick="render('vertical')">Vertical</button>
-  <pre id="output"></pre>
-
-  <script>
-    const ASL_FINGERSPELL_DICT = {
-      'A': '𝣷𝪜',
-      'B': '𝡇𝪜',
-      'C': '𝡭𝪜',
-      'D': '𝠁𝪜',
-      'E': '𝡊𝪜',
-      'F': '𝣎𝪜',
-      'G': '𝣰',
-      'H': '𝠕𝪢',
-      'I': '𝢒𝪜',
-      'J': '𝦢𝪬\n𝢒𝪜',
-      'K': '𝡀𝪜',
-      'L': '𝣜𝪜',
-      'M': '𝢍𝪜',
-      'N': '𝠙𝪜',
-      'O': '𝡶𝪜',
-      'P': '𝡀𝪜𝪡',
-      'Q': '𝣱𝪜𝪡',
-      'R': '𝠚𝪜',
-      'S': '𝤃𝪜',
-      'T': '𝣻𝪜',
-      'U': '𝠕𝪜',
-      'V': '𝠎𝪜',
-      'W': '𝢇𝪜',
-      'X': '𝠆𝪜',
-      'Y': '𝢚𝪜',
-      'Z': ' 𝥅𝪪\n𝠀𝪜',
-      '.': '𝪈𝪢',
-      ',': '𝪇𝪢',
-      ':': '𝪊𝪢',
-      ';': '𝪉𝪢',
-      '(': '𝪋𝪢',
-      ')': '𝪋𝪦',
-      '?': '𝦟𝪝𝪬\n𝠀𝪜',
-      '0': '𝡶𝪜',
-      '1': '𝠀𝪜',
-      '2': '𝠎𝪜',
-      '3': '𝠞𝪜',
-      '4': '𝡄𝪜',
-      '5': '𝡌𝪜',
-      '6': '𝢇𝪜',
-      '7': '𝢥𝪜',
-      '8': '𝢻𝪜',
-      '9': '𝣎𝪜',
-    };
-
-    function textToFingerspell(text, mode) {
-      if (mode === "vertical") {
-        return text.split('').map(c => ASL_FINGERSPELL_DICT[c.toUpperCase()] || c).join('\n');
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ASL Fingerspelling</title>
+    <style>
+      @font-face {
+        font-family: "Noto Sans SignWriting";
+        src: url("NotoSansSignWriting-Regular.ttf") format("truetype");
+        font-weight: normal;
+        font-style: normal;
       }
 
-      const topLine = [], botLine = [];
+      body {
+        background-color: #0000cc;
+        color: #ffff00;
+        font-family: "Noto Sans", Arial, sans-serif; /* Changed for general text */
+        padding: 2rem;
+      }
 
-      for (const ch of text) {
-        const sym = ASL_FINGERSPELL_DICT[ch.toUpperCase()] || ch;
-        const parts = sym.split('\n');
-        if (parts.length === 1) {
-          botLine.push(parts[0]);
-          topLine.push(' '.repeat(parts[0].length));
-        } else {
-          topLine.push(parts[0]);
-          botLine.push(parts[1]);
+      textarea {
+        width: 100%;
+        height: 100px;
+        font-size: 1.2rem;
+        padding: 0.5rem;
+        margin-bottom: 1rem;
+        background-color: transparent;
+        color: #ffff00; /* Yellow text for textarea */
+        border: 1px solid #ffff00; /* Yellow border for textarea */
+      }
+
+      button {
+        margin-right: 1rem;
+        padding: 0.5rem 1rem;
+        font-size: 1rem;
+        background-color: #ffff00;
+        color: #0000cc;
+        border: none;
+        cursor: pointer;
+      }
+
+      pre {
+        white-space: pre-wrap;
+        font-size: 2rem;
+        line-height: 2.5rem;
+        margin-top: 1rem;
+        word-wrap: break-word;
+        font-family: "Noto Sans SignWriting", sans-serif; /* Explicitly for SignWriting output */
+      }
+    </style>
+  </head>
+  <body>
+    <h1>ASL Fingerspelling</h1>
+    <textarea id="inputText" placeholder="Type text here..."></textarea><br />
+    <button onclick="render('horizontal')">Horizontal</button>
+    <button onclick="render('vertical')">Vertical</button>
+    <pre id="output"></pre>
+
+    <script>
+      const ASL_FINGERSPELL_DICT = {
+        A: "𝣷𝪜",
+        B: "𝡇𝪜",
+        C: "𝡭𝪜",
+        D: "𝠁𝪜",
+        E: "𝡊𝪜",
+        F: "𝣎𝪜",
+        G: "𝣰",
+        H: "𝠕𝪢",
+        I: "𝢒𝪜",
+        J: "𝦢𝪬\n𝢒𝪜",
+        K: "𝡀𝪜",
+        L: "𝣜𝪜",
+        M: "𝢍𝪜",
+        N: "𝠙𝪜",
+        O: "𝡶𝪜",
+        P: "𝡀𝪜𝪡",
+        Q: "𝣱𝪜𝪡",
+        R: "𝠚𝪜",
+        S: "𝤃𝪜",
+        T: "𝣻𝪜",
+        U: "𝠕𝪜",
+        V: "𝠎𝪜",
+        W: "𝢇𝪜",
+        X: "𝠆𝪜",
+        Y: "𝢚𝪜",
+        Z: " 𝥅𝪪\n𝠀𝪜",
+        ".": "𝪈𝪢",
+        ",": "𝪇𝪢",
+        ":": "𝪊𝪢",
+        ";": "𝪉𝪢",
+        "(": "𝪋𝪢",
+        ")": "𝪋𝪦",
+        "?": "𝦟𝪝𝪬\n𝠀𝪜",
+        0: "𝡶𝪜",
+        1: "𝠀𝪜",
+        2: "𝠎𝪜",
+        3: "𝠞𝪜",
+        4: "𝡄𝪜",
+        5: "𝡌𝪜",
+        6: "𝢇𝪜",
+        7: "𝢥𝪜",
+        8: "𝢻𝪜",
+        9: "𝣎𝪜",
+      };
+
+      function textToFingerspell(text, mode) {
+        if (mode === "vertical") {
+          return text
+            .split("")
+            .map((c) => ASL_FINGERSPELL_DICT[c.toUpperCase()] || c)
+            .join("\n");
         }
+
+        // Horizontal mode
+        const topLineSegments = [];
+        const botLineSegments = [];
+        let previousCharWasZ = false; // Flag to track if the *immediately preceding* character was Z
+
+        for (const char of text) {
+          const charUpper = char.toUpperCase();
+          const sym = ASL_FINGERSPELL_DICT[charUpper] || char;
+          const parts = sym.split("\n");
+
+          let currentTopPart = "";
+          let currentBotPart = "";
+
+          if (parts.length === 1) { // Single-line symbol
+            currentBotPart = parts[0];
+            currentTopPart = "\u00A0"; // Always one non-breaking space
+            previousCharWasZ = false; // Current char is not Z, so reset for next iteration
+          } else { // Two-line symbol
+            currentTopPart = parts[0]; // Raw top part
+            currentBotPart = parts[1]; // Raw bottom part
+
+            // Z-Z Ligature: If current is Z and previous was Z, remove leading space from current Z's top part
+            if (charUpper === 'Z' && previousCharWasZ) {
+              if (currentTopPart.startsWith(" ")) { // Check if it actually has a leading space
+                currentTopPart = currentTopPart.substring(1);
+              }
+            }
+            
+            // Determine if the *current* character is Z for the *next* iteration's check
+            if (charUpper === 'Z') {
+              previousCharWasZ = true;
+            } else {
+              previousCharWasZ = false;
+            }
+
+            // Padding logic (if top is shorter than bottom)
+            const topGlyphLength = Array.from(currentTopPart).length;
+            const botGlyphLength = Array.from(currentBotPart).length;
+
+            if (topGlyphLength < botGlyphLength) {
+              currentTopPart += "\u00A0".repeat(botGlyphLength - topGlyphLength); // Use non-breaking spaces for padding
+            }
+          }
+          topLineSegments.push(currentTopPart);
+          botLineSegments.push(currentBotPart);
+        }
+        return topLineSegments.join("") + "\n" + botLineSegments.join("");
       }
 
-      return topLine.join('') + '\n' + botLine.join('');
-    }
-
-    function render(mode) {
-      const text = document.getElementById('inputText').value;
-      const result = textToFingerspell(text, mode);
-      document.getElementById('output').textContent = result;
-    }
-  </script>
-</body>
+      function render(mode) {
+        const text = document.getElementById("inputText").value;
+        const result = textToFingerspell(text, mode);
+        document.getElementById("output").textContent = result;
+      }
+    </script>
+  </body>
 </html>

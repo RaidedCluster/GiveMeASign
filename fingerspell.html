@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Fingerspell — Give Me a Sign</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+@font-face {
+  font-family: "Noto Sans SignWriting";
+  src: url("NotoSansSignWriting-Regular.ttf") format("truetype");
+}
+
+:root {
+  --blue:#0000cc;
+  --yellow:#ffff00;
+}
+
+body {
+  background: var(--blue);
+  color: var(--yellow);
+  font-family: "Noto Sans", Arial, sans-serif;
+  padding: 2rem;
+}
+
+a { color: var(--yellow); text-decoration:none; font-weight:700; }
+
+h1 { font-size:3rem; margin:1rem 0 1rem; }
+
+/* Replace your existing textarea block with this */
+textarea {
+  width: 100%;
+  background: transparent;
+  color: var(--yellow);
+  border: 2px solid var(--yellow);
+  padding: 1rem;
+  font-size: 1.2rem;
+  resize: vertical;
+  border-radius: 1rem; /* Added for rounded corners */
+  box-sizing: border-box; /* Ensures padding doesn't break the width */
+}
+
+#inputText { height:120px; font-family:"Noto Sans",Arial,sans-serif; }
+#output {
+  height:260px;
+  margin-top:2rem;
+  font-family:"Noto Sans SignWriting", monospace;
+  white-space:pre;
+}
+
+button {
+  background: var(--yellow);
+  color: var(--blue);
+  border: none;
+  padding: 0.8rem 1.4rem;
+  font-family: "Noto Sans", Arial, sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  margin-right: 1rem;
+  margin-top: 1rem;
+  cursor: pointer;
+  border-radius: 0.5rem; /* Added rounded corners */
+}
+
+/* language picker */
+.lang { position:relative; display:inline-block; margin-bottom:1rem; }
+#langButton {
+  border: 2px solid var(--yellow);
+  padding: 0.4rem 0.8rem;
+  font-family: "Noto Sans", Arial, sans-serif;
+  font-weight: 700;
+  cursor: pointer;
+  user-select: none;
+  border-radius: 0.5rem; /* Added rounded corners */
+}
+#langMenu {
+  position:absolute;
+  top:100%; left:0;
+  background:var(--blue);
+  border:2px solid var(--yellow);
+  display:none;
+  z-index:10;
+  border-radius: 0.5rem;
+}
+#langMenu div {
+  padding:0.4rem 0.8rem;
+  cursor:pointer;
+}
+#langMenu div:hover {
+  background:var(--yellow);
+  color:var(--blue);
+}
+
+button {
+  background: var(--yellow);
+  color: var(--blue);
+  border: none;
+  padding: 0.8rem 1.4rem;
+  font-family: "Noto Sans", Arial, sans-serif; /* Add this line */
+  font-size: 1rem;
+  font-weight: 700;
+  margin-right: 1rem;
+  margin-top: 1rem;
+  cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<a href="index.html">← Give Me a Sign</a>
+<h1>Fingerspell</h1>
+
+<div class="lang">
+  <div id="langButton" onclick="toggleLang()">ASL ▾</div>
+<div id="langMenu">
+    <div onclick="pickLang('asl')">ASL</div>
+    <div onclick="pickLang('jsl')">JSL</div>
+    <div onclick="pickLang('libras')">LIBRAS</div>
+</div>
+</div>
+</div>
+
+<textarea id="inputText" placeholder="Type here..."></textarea><br>
+<button onclick="render('horizontal')">Horizontal</button>
+<button onclick="render('vertical')">Vertical</button>
+<textarea id="output"></textarea>
+
+<script>
+const THIN="\u2004", NBSP="\u00A0";
+const glen=s=>Array.from(s).length;
+
+const DICTS = {
+    asl: {
+        A:"𝣷𝪜",B:"𝡇𝪜",C:"𝡭𝪜",D:"𝠁𝪜",E:"𝡊𝪜",F:"𝣎𝪜",G:"𝣰",H:"𝠕𝪢",I:"𝢒𝪜",
+        J:"𝦢𝪬\n𝢒𝪜",K:"𝡀𝪜",L:"𝣜𝪜",M:"𝢍𝪜",N:"𝠙𝪜",O:"𝡶𝪜",P:"𝡀𝪜𝪡",Q:"𝣱𝪜𝪡",
+        R:"𝠚𝪜",S:"𝤃𝪜",T:"𝣻𝪜",U:"𝠕𝪜",V:"𝠎𝪜",W:"𝢇𝪜",X:"𝠆𝪜",Y:"𝢚𝪜",
+        Z:THIN+"𝥅𝪪\n𝠀𝪜",
+        ".":"𝪈𝪢",",":"𝪇𝪢",":":"𝪊𝪢",";":"𝪉𝪢","(":"𝪋𝪢",")":"𝪋𝪦","?":"𝦟𝪝𝪬\n𝠀𝪜",
+        0:"𝡶𝪜",1:"𝠀𝪜",2:"𝠎𝪜",3:"𝠞𝪜",4:"𝡄𝪜",5:"𝡌𝪜",6:"𝢇𝪜",7:"𝢥𝪜",8:"𝢻𝪜",9:"𝣎𝪜"
+    },
+    jsl: {
+        // Digraphs (2-char keys)
+        "きゃ":["𝣮𝪜𝪦","𝥥𝪤","𝢚𝪜"],"きゅ":["𝣮𝪜𝪦","𝥥𝪤","𝢌"],"きょ":["𝣮𝪜𝪦","𝥥𝪤","𝡄𝪢"],
+        "しゃ":["𝠞𝪢","𝥥𝪤","𝢚𝪜"],"しゅ":["𝠞𝪢","𝥥𝪤","𝢌"],"しょ":["𝠞𝪢","𝥥𝪤","𝡄𝪢"],
+        "ちゃ":["𝢖𝪜","𝥥𝪤","𝢚𝪜"],"ちゅ":["𝢖𝪜","𝥥𝪤","𝢌"],"ちょ":["𝢖𝪜","𝥥𝪤","𝡄𝪢"],
+        "にゃ":["𝠎𝪢","𝥥𝪤","𝢚𝪜"],"にゅ":["𝠎𝪢","𝥥𝪤","𝢌"],"にょ":["𝠎𝪢","𝥥𝪤","𝡄𝪢"],
+        "ひゃ":["𝠀𝪜","𝥥𝪤","𝢚𝪜"],"ひゅ":["𝠀𝪜","𝥥𝪤","𝢌"],"ひょ":["𝠀𝪜","𝥥𝪤","𝡄𝪢"],
+        "みゃ":["𝢌𝪢","𝥥𝪤","𝢚𝪜"],"みゅ":["𝢌𝪢","𝥥𝪤","𝢌"],"みょ":["𝢌𝪢","𝥥𝪤","𝡄𝪢"],
+        "りゃ":["𝦢𝪬","𝠎𝪞","𝥥𝪤","𝢚𝪜"],"りゅ":["𝦢𝪬","𝠎𝪞","𝥥𝪤","𝢌"],"りょ":["𝦢𝪬","𝠎𝪞","𝥥𝪤","𝡄𝪢"],
+        "ぎゃ":["𝣮𝪜𝪦𝥥𝪦","𝥥𝪤","𝢚𝪜"],"ぎゅ":["𝣮𝪜𝪦𝥥𝪦","𝥥𝪤","𝢌"],"ぎょ":["𝣮𝪜𝪦𝥥𝪦","𝥥𝪤","𝡄𝪢"],
+        "じゃ":["𝠞𝪢𝥥𝪦","𝥥𝪤","𝢚𝪜"],"じゅ":["𝠞𝪢𝥥𝪦","𝥥𝪤","𝢌"],"じょ":["𝠞𝪢𝥥𝪦","𝥥𝪤","𝡄𝪢"],
+        "ぴゃ":["𝤪","𝠀𝪜","𝥥𝪤","𝢚𝪜"],"ぴゅ":["𝤪","𝠀𝪜","𝥥𝪤","𝢌"],"ぴょ":["𝤪","𝠀𝪜","𝥥𝪤","𝡄𝪢"],
+        // Standard (1-char keys)
+        "あ":"𝣷𝪜","ぁ":"𝥥𝪤\n𝣷𝪜","い":"𝢒𝪜","ぃ":"𝥥𝪤\n𝢒𝪜","う":"𝠕𝪜","ぅ":"𝥥𝪤\n𝠕𝪜","え":"𝡦𝪜","ぇ":"𝥥𝪤\n𝡦𝪜","お":"𝡶𝪛","ぉ":"𝥥𝪤\n𝡶𝪛",
+        "か":"𝡀𝪜","ゕ":"𝥥𝪤\n𝡀𝪜","き":"𝣮𝪜𝪦","く":"𝡝𝪢","け":"𝡇𝪜","ゖ":"𝥥𝪤\n𝡇𝪜","こ":"𝢀𝪛",
+        "さ":"𝤃𝪜","し":"𝠞𝪢","す":"𝠞𝪤","せ":"𝣆𝪜","そ":"𝠀𝪞",
+        "た":"𝣷𝪞","ち":"𝢖𝪜","つ":"𝢳𝪜","っ":"𝥥𝪤\n𝢳𝪜","て":"𝡌𝪜","と":"𝠕",
+        "な":"𝠎𝪤","に":"𝠎𝪢","ぬ":"𝠆𝪛","ね":"𝡌𝪤","の":"𝤪𝪣\n𝠀𝪛",
+        "は":"𝠕𝪞","ひ":"𝠀𝪜","ふ":"𝣰𝪟𝪡","へ":"𝢚𝪟","ほ":"𝢀𝪝",
+        "ま":"𝢌𝪤","み":"𝢌𝪢","む":"𝣜𝪢","め":"𝣎𝪜","も":"𝤪𝪤\n𝤜𝣴𝪝𝪦",
+        "や":"𝢚𝪜","ゃ":"𝥥𝪤\n𝢚𝪜","ゆ":"𝢌","ゅ":"𝥥𝪤\n𝢌","よ":"𝡄𝪢","ょ":"𝥥𝪤\n𝡄𝪢",
+        "ら":"𝠚𝪜","り":"𝦢𝪬\n𝠎𝪞","る":"𝠞𝪜","れ":"𝣜𝪜","ろ":"𝠐𝪛",
+        "わ":"𝢆𝪜","ゎ":"𝥥𝪤\n𝢆𝪜","ゐ":"𝥥𝪤\n𝢒𝪜","ゑ":"𝥥𝪤\n𝡦𝪜","を":"𝥥𝪤\n𝡶𝪛","ん":"𝦢𝪤\n𝠀𝪞",
+        "が":"𝡀𝪜𝥥𝪦","ぎ":"𝣮𝪜𝪦𝥥𝪦","ぐ":"𝡝𝪢𝥥𝪦","げ":"𝡇𝪜𝥥𝪦","ご":"𝢀𝪛𝥥𝪦",
+        "ざ":"𝤃𝪜𝥥𝪦","じ":"𝠞𝪢𝥥𝪦","ず":"𝠞𝪤𝥥𝪦","ぜ":"𝣆𝪜𝥥𝪦","ぞ":"𝠀𝪞𝥥𝪦",
+        "だ":"𝣷𝪞𝥥𝪦","ぢ":"𝢖𝪜𝥥𝪦","づ":"𝢳𝪜𝥥𝪦","で":"𝡌𝪜𝥥𝪦","ど":"𝠕𝥥𝪦",
+        "ば":"𝠕𝪞𝥥𝪦","び":"𝠀𝪜𝥥𝪦","ぶ":"𝣰𝪟𝪡𝥥𝪦","べ":"𝢚𝪟𝥥𝪦","ぼ":"𝢀𝪝𝥥𝪦",
+        "ぱ":"𝤪\n𝠕𝪞","ぴ":"𝤪\n𝠀𝪜","ぷ":"𝤪\n𝣰𝪟𝪡","ぺ":"𝤪\n𝢚𝪟","ぽ":"𝤪\n𝢀𝪝",
+        "ー":"𝥥𝪤",
+        "0":"𝠊𝪛","1":"𝠀𝪜","2":"𝠎𝪜","3":"𝢆𝪜","4":"𝡄𝪜","5":"𝣷𝪜","6":"𝣜𝪢","7":"𝠞𝪢","8":"𝢎𝪢","9":"𝡝𝪢"
+    },
+    libras: {
+        A:"𝣷𝪜", B:"𝡇𝪜", C:"𝡭𝪜", "Ç":"𝡭𝪜\n𝧢𝪝", D:"𝠁𝪜", E:"𝡊𝪜", 
+        F:"𝣒𝪜", G:"𝣟𝪜", H:"𝧟\n𝡀𝪜𝪧", I:"𝢒𝪜", J:"𝢒𝪟\n𝦢𝪬", 
+        K:"𝤮\n𝡀𝪜", L:"𝣜𝪜", M:"𝢍𝪜", N:"𝠙𝪜", O:"𝡶𝪜", P:"𝡀𝪟", 
+        Q:"𝣲𝪟", R:"𝠚𝪜", S:"𝤃𝪜", T:"𝣓𝪜", U:"𝠕𝪜", V:"𝠎𝪜", 
+        W:"𝢇𝪜", X:"𝠊𝪟\n𝥥𝪤", Y:"𝢚𝪜", Z:THIN+"𝥅𝪪\n𝠀𝪜",
+        // Libras Numbers
+        "0":"𝡶𝪜", "1":"𝠀", "2":"𝠎", "3":"𝢆", "4":"𝡄", 
+        "5":"𝠐𝪨", "6":"𝡵𝪝𝪮", "7":"𝢃𝪛", "8":"𝧢𝪝\n𝤃𝪛", "9":"𝡵𝪟𝪢"
+    }
+};
+
+let CURRENT = DICTS.asl;
+let LANG_CODE = "asl";
+
+const VERTICAL = { ".":"𝪈",",":"𝪇",":":"𝪊",";":"𝪉","(":"𝪋",")":"𝪋𝪤" };
+
+function setLanguage(l) { 
+    LANG_CODE = l;
+    CURRENT = DICTS[l] || DICTS.asl; 
+    render("horizontal"); 
+}
+
+function textToFingerspell(text, mode) {
+    if (!text.trim()) return "";
+
+    text = text.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    
+    // Tokenize for JSL digraphs
+    let tokens = [];
+    let i = 0;
+    const chars = Array.from(text);
+    while (i < chars.length) {
+        let pair = chars[i] + (chars[i+1] || "");
+        if (CURRENT[pair] && pair.length > 1) {
+            tokens.push(CURRENT[pair]);
+            i += 2;
+        } else {
+            let char = chars[i];
+            let lookup = CURRENT[char] || CURRENT[char.toUpperCase()] || char;
+            tokens.push(lookup);
+            i += 1;
+        }
+    }
+
+    if (mode === "vertical") {
+        return tokens.map(t => {
+            if (Array.isArray(t)) return t.join("\n");
+            let val = VERTICAL[t] || t;
+            return val.replace(/\n/g, "\n"); // already handled
+        }).join("\n\n");
+    }
+
+    // Horizontal logic
+    // We normalize everything to an array of components
+    const processed = tokens.map(t => {
+        if (Array.isArray(t)) return t;
+        return typeof t === "string" ? t.split("\n") : [t];
+    });
+
+    const maxLines = Math.max(...processed.map(p => p.length));
+    let grid = Array(maxLines).fill("");
+
+    for (const parts of processed) {
+        const diff = maxLines - parts.length;
+        // Top-align or Bottom-align? Your Python code used top padding.
+        // Let's match the existing ASL 'bottom-heavy' style.
+        for (let j = 0; j < maxLines; j++) {
+            let segment = "";
+            if (j < diff) {
+                segment = NBSP; // padding
+            } else {
+                segment = parts[j - diff];
+            }
+            grid[j] += segment;
+        }
+    }
+    return grid.join("\n");
+}
+
+function render(mode) {
+    const out = [], lines = inputText.value.split("\n");
+    for (const l of lines) {
+        const r = textToFingerspell(l, mode);
+        if (r) out.push(r);
+    }
+    output.value = out.join("\n\n");
+}
+
+function toggleLang() {
+    langMenu.style.display = langMenu.style.display === "block" ? "none" : "block";
+}
+
+function pickLang(l) {
+    setLanguage(l);
+    langButton.textContent = l.toUpperCase() + " ▾";
+    langMenu.style.display = "none";
+}
+
+document.addEventListener("click", e => {
+    if (!e.target.closest(".lang")) langMenu.style.display = "none";
+});
+</script>
+
+</body>
+</html>

@@ -1,198 +1,115 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ASL Fingerspelling</title>
-    <style>
-      @font-face {
-        font-family: "Noto Sans SignWriting";
-        src: url("NotoSansSignWriting-Regular.ttf") format("truetype");
-        font-weight: normal;
-        font-style: normal;
-      }
+<head>
+<meta charset="UTF-8">
+<title>Give Me a Sign</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-      body {
-        background-color: #0000cc;
-        color: #ffff00;
-        font-family: "Noto Sans", Arial, sans-serif; /* Changed for general text */
-        padding: 2rem;
-      }
+<style>
+@font-face {
+  font-family: "Noto Sans SignWriting";
+  src: url("NotoSansSignWriting-Regular.ttf") format("truetype");
+}
 
-      textarea {
-        width: 100%;
-        height: 100px;
-        font-size: 1.2rem;
-        padding: 0.5rem;
-        margin-bottom: 1rem;
-        background-color: transparent;
-        color: #ffff00; /* Yellow text for textarea */
-        border: 1px solid #ffff00; /* Yellow border for textarea */
-      }
+:root {
+  --blue: #0000cc;
+  --yellow: #ffff00;
+}
 
-      button {
-        margin-right: 1rem;
-        padding: 0.5rem 1rem;
-        font-size: 1rem;
-        background-color: #ffff00;
-        color: #0000cc;
-        border: none;
-        cursor: pointer;
-      }
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
-      pre {
-        white-space: pre-wrap;
-        font-size: 2rem;
-        line-height: 2.5rem;
-        margin-top: 1rem;
-        word-wrap: break-word;
-        font-family: "Noto Sans SignWriting", sans-serif; /* Explicitly for SignWriting output */
-      }
-    </style>
-  </head>
-  <body>
-    <h1>ASL Fingerspelling</h1>
-    <textarea id="inputText" placeholder="Type text here..."></textarea><br />
-    <button onclick="render('horizontal')">Horizontal</button>
-    <button onclick="render('vertical')">Vertical</button>
-    <pre id="output"></pre>
+body {
+  background: var(--blue);
+  color: var(--yellow);
+  font-family: "Noto Sans", Arial, sans-serif;
+  min-height: 100vh;
+}
 
-    <script>
-      const ASL_FINGERSPELL_DICT = {
-        A: "𝣷𝪜",
-        B: "𝡇𝪜",
-        C: "𝡭𝪜",
-        D: "𝠁𝪜",
-        E: "𝡊𝪜",
-        F: "𝣎𝪜",
-        G: "𝣰",
-        H: "𝠕𝪢",
-        I: "𝢒𝪜",
-        J: "𝦢𝪬\n𝢒𝪜",
-        K: "𝡀𝪜",
-        L: "𝣜𝪜",
-        M: "𝢍𝪜",
-        N: "𝠙𝪜",
-        O: "𝡶𝪜",
-        P: "𝡀𝪜𝪡",
-        Q: "𝣱𝪜𝪡",
-        R: "𝠚𝪜",
-        S: "𝤃𝪜",
-        T: "𝣻𝪜",
-        U: "𝠕𝪜",
-        V: "𝠎𝪜",
-        W: "𝢇𝪜",
-        X: "𝠆𝪜",
-        Y: "𝢚𝪜",
-        Z: " 𝥅𝪪\n𝠀𝪜",
-        ".": "𝪈𝪢",
-        ",": "𝪇𝪢",
-        ":": "𝪊𝪢",
-        ";": "𝪉𝪢",
-        "(": "𝪋𝪢",
-        ")": "𝪋𝪦",
-        "?": "𝦟𝪝𝪬\n𝠀𝪜",
-        0: "𝡶𝪜",
-        1: "𝠀𝪜",
-        2: "𝠎𝪜",
-        3: "𝠞𝪜",
-        4: "𝡄𝪜",
-        5: "𝡌𝪜",
-        6: "𝢇𝪜",
-        7: "𝢥𝪜",
-        8: "𝢻𝪜",
-        9: "𝣎𝪜",
-      };
+header {
+  padding: 2rem 3rem;
+}
 
-      const VERTICAL_PUNCTUATION_OVERRIDES = {
-        '.': '𝪈',
-        ',': '𝪇',
-        ':': '𝪊',
-        ';': '𝪉',
-        '(': '𝪋',
-        ')': '𝪋𝪤',
-      };
+h1 {
+  font-size: 2.5rem;
+  font-weight: 900;
+}
 
-      function textToFingerspell(text, mode) {
-        if (!text || text.trim() === "") { // Handle empty or whitespace-only input
-          return "";
-        }
-        if (mode === "vertical") {
-          return text
-            .split("")
-            .map((c) => {
-              if (VERTICAL_PUNCTUATION_OVERRIDES.hasOwnProperty(c)) {
-                return VERTICAL_PUNCTUATION_OVERRIDES[c];
-              }
-              return ASL_FINGERSPELL_DICT[c.toUpperCase()] || c;
-            })
-            .join("\n");
-        }
+main {
+  display: grid;
+  place-items: center;
+  height: calc(100vh - 100px);
+}
 
-        // Horizontal mode
-        const topLineSegments = [];
-        const botLineSegments = [];
-        let previousCharWasZ = false; // Flag to track if the *immediately preceding* character was Z
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 4rem;
+  max-width: 900px;
+  width: 100%;
+  padding: 3rem;
+}
 
-        for (const char of text) {
-          const charUpper = char.toUpperCase();
-          const sym = ASL_FINGERSPELL_DICT[charUpper] || char;
-          const parts = sym.split("\n");
+.card {
+  background: var(--yellow);
+  color: var(--blue);
+  border-radius: 2rem;
+  padding: 3rem 2rem;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  text-align: center;
+  text-decoration: none;
+  transition: transform 0.1s ease;
+}
 
-          let currentTopPart = "";
-          let currentBotPart = "";
+.card:hover {
+  transform: translateY(-6px);
+}
 
-          if (parts.length === 1) { // Single-line symbol
-            currentBotPart = parts[0];
-            currentTopPart = "\u00A0"; // Always one non-breaking space
-            previousCharWasZ = false; // Current char is not Z, so reset for next iteration
-          } else { // Two-line symbol
-            currentTopPart = parts[0]; // Raw top part
-            currentBotPart = parts[1]; // Raw bottom part
+.sign {
+  font-family: "Noto Sans SignWriting";
+  font-size: 3.5rem;
+  line-height: 1.2;
+  margin-bottom: 1.5rem;
+}
 
-            // Z-Z Ligature: If current is Z and previous was Z, remove leading space from current Z's top part
-            if (charUpper === 'Z' && previousCharWasZ) {
-              if (currentTopPart.startsWith(" ")) { // Check if it actually has a leading space
-                currentTopPart = currentTopPart.substring(1);
-              }
-            }
-            
-            // Determine if the *current* character is Z for the *next* iteration's check
-            if (charUpper === 'Z') {
-              previousCharWasZ = true;
-            } else {
-              previousCharWasZ = false;
-            }
+.label {
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+</style>
+</head>
 
-            // Padding logic (if top is shorter than bottom)
-            const topGlyphLength = Array.from(currentTopPart).length;
-            const botGlyphLength = Array.from(currentBotPart).length;
+<body>
 
-            if (topGlyphLength < botGlyphLength) {
-              currentTopPart += "\u00A0".repeat(botGlyphLength - topGlyphLength); // Use non-breaking spaces for padding
-            }
-          }
-          topLineSegments.push(currentTopPart);
-          botLineSegments.push(currentBotPart);
-        }
-        return topLineSegments.join("") + "\n" + botLineSegments.join("");
-      }
+<header>
+  <h1>Give Me a Sign</h1>
+</header>
 
-      function render(mode) {
-        const inputText = document.getElementById("inputText").value;
-        const lines = inputText.split('\n'); // Split input by actual newline characters
-        const outputSegments = [];
+<main>
+  <div class="grid">
 
-        for (const line of lines) {
-          const fingerspelledLine = textToFingerspell(line, mode);
-          // Only add non-empty results to our list of segments to be joined.
-          if (fingerspelledLine !== "") {
-            outputSegments.push(fingerspelledLine);
-          }
-        }
-        // Join the processed, non-empty segments with two newlines as a separator.
-        document.getElementById("output").textContent = outputSegments.join("\n\n");
-      }
-    </script>
-  </body>
+    <a class="card" href="fingerspell.html">
+      <div class="sign">
+        𝤥𝪜<br>
+        𝡌𝪟𝥦𝪦
+      </div>
+      <div class="label">Fingerspell</div>
+    </a>
+
+    <a class="card" href="signmaker.html">
+      <div class="sign">
+        𝢅𝪛𝪩𝢅𝪛𝪡<br>
+        𝧦𝪛𝪮𝧦𝪢
+      </div>
+      <div class="label">SignMaker</div>
+    </a>
+
+  </div>
+</main>
+
+</body>
 </html>

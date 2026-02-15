@@ -27,7 +27,6 @@ a { color: var(--yellow); text-decoration:none; font-weight:700; }
 
 h1 { font-size:3rem; margin:1rem 0 1rem; }
 
-/* Replace your existing textarea block with this */
 textarea {
   width: 100%;
   background: transparent;
@@ -36,8 +35,8 @@ textarea {
   padding: 1rem;
   font-size: 1.2rem;
   resize: vertical;
-  border-radius: 1rem; /* Added for rounded corners */
-  box-sizing: border-box; /* Ensures padding doesn't break the width */
+  border-radius: 1rem;
+  box-sizing: border-box;
 }
 
 #inputText { height:120px; font-family:"Noto Sans",Arial,sans-serif; }
@@ -59,7 +58,7 @@ button {
   margin-right: 1rem;
   margin-top: 1rem;
   cursor: pointer;
-  border-radius: 0.5rem; /* Added rounded corners */
+  border-radius: 0.5rem;
 }
 
 /* language picker */
@@ -71,7 +70,7 @@ button {
   font-weight: 700;
   cursor: pointer;
   user-select: none;
-  border-radius: 0.5rem; /* Added rounded corners */
+  border-radius: 0.5rem;
 }
 #langMenu {
   position:absolute;
@@ -90,19 +89,6 @@ button {
   background:var(--yellow);
   color:var(--blue);
 }
-
-button {
-  background: var(--yellow);
-  color: var(--blue);
-  border: none;
-  padding: 0.8rem 1.4rem;
-  font-family: "Noto Sans", Arial, sans-serif; /* Add this line */
-  font-size: 1rem;
-  font-weight: 700;
-  margin-right: 1rem;
-  margin-top: 1rem;
-  cursor: pointer;
-}
 </style>
 </head>
 
@@ -113,12 +99,11 @@ button {
 
 <div class="lang">
   <div id="langButton" onclick="toggleLang()">ASL ▾</div>
-<div id="langMenu">
+  <div id="langMenu">
     <div onclick="pickLang('asl')">ASL</div>
     <div onclick="pickLang('jsl')">JSL</div>
     <div onclick="pickLang('libras')">LIBRAS</div>
-</div>
-</div>
+  </div>
 </div>
 
 <textarea id="inputText" placeholder="Type here..."></textarea><br>
@@ -127,10 +112,12 @@ button {
 <textarea id="output"></textarea>
 
 <script>
-const THIN="\u2004", NBSP="\u00A0";
-const glen=s=>Array.from(s).length;
+const THIN  = "\u2004";   // Thin space
+const NBSP  = "\u00A0";   // Non-breaking space (lane padding)
+const SEP   = "\u2001";   // Em Quad spacer (horizontal column separator for JSL)
 
-const DICTS = {
+// ─── ASL / LIBRAS dictionaries (string-based, \n for multi-line) ───
+const DICTS_STR = {
     asl: {
         A:"𝣷𝪜",B:"𝡇𝪜",C:"𝡭𝪜",D:"𝠁𝪜",E:"𝡊𝪜",F:"𝣎𝪜",G:"𝣰",H:"𝠕𝪢",I:"𝢒𝪜",
         J:"𝦢𝪬\n𝢒𝪜",K:"𝡀𝪜",L:"𝣜𝪜",M:"𝢍𝪜",N:"𝠙𝪜",O:"𝡶𝪜",P:"𝡀𝪜𝪡",Q:"𝣱𝪜𝪡",
@@ -139,124 +126,176 @@ const DICTS = {
         ".":"𝪈𝪢",",":"𝪇𝪢",":":"𝪊𝪢",";":"𝪉𝪢","(":"𝪋𝪢",")":"𝪋𝪦","?":"𝦟𝪝𝪬\n𝠀𝪜",
         0:"𝡶𝪜",1:"𝠀𝪜",2:"𝠎𝪜",3:"𝠞𝪜",4:"𝡄𝪜",5:"𝡌𝪜",6:"𝢇𝪜",7:"𝢥𝪜",8:"𝢻𝪜",9:"𝣎𝪜"
     },
-    jsl: {
-        // Digraphs (2-char keys)
-        "きゃ":["𝣮𝪜𝪦","𝥥𝪤","𝢚𝪜"],"きゅ":["𝣮𝪜𝪦","𝥥𝪤","𝢌"],"きょ":["𝣮𝪜𝪦","𝥥𝪤","𝡄𝪢"],
-        "しゃ":["𝠞𝪢","𝥥𝪤","𝢚𝪜"],"しゅ":["𝠞𝪢","𝥥𝪤","𝢌"],"しょ":["𝠞𝪢","𝥥𝪤","𝡄𝪢"],
-        "ちゃ":["𝢖𝪜","𝥥𝪤","𝢚𝪜"],"ちゅ":["𝢖𝪜","𝥥𝪤","𝢌"],"ちょ":["𝢖𝪜","𝥥𝪤","𝡄𝪢"],
-        "にゃ":["𝠎𝪢","𝥥𝪤","𝢚𝪜"],"にゅ":["𝠎𝪢","𝥥𝪤","𝢌"],"にょ":["𝠎𝪢","𝥥𝪤","𝡄𝪢"],
-        "ひゃ":["𝠀𝪜","𝥥𝪤","𝢚𝪜"],"ひゅ":["𝠀𝪜","𝥥𝪤","𝢌"],"ひょ":["𝠀𝪜","𝥥𝪤","𝡄𝪢"],
-        "みゃ":["𝢌𝪢","𝥥𝪤","𝢚𝪜"],"みゅ":["𝢌𝪢","𝥥𝪤","𝢌"],"みょ":["𝢌𝪢","𝥥𝪤","𝡄𝪢"],
-        "りゃ":["𝦢𝪬","𝠎𝪞","𝥥𝪤","𝢚𝪜"],"りゅ":["𝦢𝪬","𝠎𝪞","𝥥𝪤","𝢌"],"りょ":["𝦢𝪬","𝠎𝪞","𝥥𝪤","𝡄𝪢"],
-        "ぎゃ":["𝣮𝪜𝪦𝥥𝪦","𝥥𝪤","𝢚𝪜"],"ぎゅ":["𝣮𝪜𝪦𝥥𝪦","𝥥𝪤","𝢌"],"ぎょ":["𝣮𝪜𝪦𝥥𝪦","𝥥𝪤","𝡄𝪢"],
-        "じゃ":["𝠞𝪢𝥥𝪦","𝥥𝪤","𝢚𝪜"],"じゅ":["𝠞𝪢𝥥𝪦","𝥥𝪤","𝢌"],"じょ":["𝠞𝪢𝥥𝪦","𝥥𝪤","𝡄𝪢"],
-        "ぴゃ":["𝤪","𝠀𝪜","𝥥𝪤","𝢚𝪜"],"ぴゅ":["𝤪","𝠀𝪜","𝥥𝪤","𝢌"],"ぴょ":["𝤪","𝠀𝪜","𝥥𝪤","𝡄𝪢"],
-        // Standard (1-char keys)
-        "あ":"𝣷𝪜","ぁ":"𝥥𝪤\n𝣷𝪜","い":"𝢒𝪜","ぃ":"𝥥𝪤\n𝢒𝪜","う":"𝠕𝪜","ぅ":"𝥥𝪤\n𝠕𝪜","え":"𝡦𝪜","ぇ":"𝥥𝪤\n𝡦𝪜","お":"𝡶𝪛","ぉ":"𝥥𝪤\n𝡶𝪛",
-        "か":"𝡀𝪜","ゕ":"𝥥𝪤\n𝡀𝪜","き":"𝣮𝪜𝪦","く":"𝡝𝪢","け":"𝡇𝪜","ゖ":"𝥥𝪤\n𝡇𝪜","こ":"𝢀𝪛",
-        "さ":"𝤃𝪜","し":"𝠞𝪢","す":"𝠞𝪤","せ":"𝣆𝪜","そ":"𝠀𝪞",
-        "た":"𝣷𝪞","ち":"𝢖𝪜","つ":"𝢳𝪜","っ":"𝥥𝪤\n𝢳𝪜","て":"𝡌𝪜","と":"𝠕",
-        "な":"𝠎𝪤","に":"𝠎𝪢","ぬ":"𝠆𝪛","ね":"𝡌𝪤","の":"𝤪𝪣\n𝠀𝪛",
-        "は":"𝠕𝪞","ひ":"𝠀𝪜","ふ":"𝣰𝪟𝪡","へ":"𝢚𝪟","ほ":"𝢀𝪝",
-        "ま":"𝢌𝪤","み":"𝢌𝪢","む":"𝣜𝪢","め":"𝣎𝪜","も":"𝤪𝪤\n𝤜𝣴𝪝𝪦",
-        "や":"𝢚𝪜","ゃ":"𝥥𝪤\n𝢚𝪜","ゆ":"𝢌","ゅ":"𝥥𝪤\n𝢌","よ":"𝡄𝪢","ょ":"𝥥𝪤\n𝡄𝪢",
-        "ら":"𝠚𝪜","り":"𝦢𝪬\n𝠎𝪞","る":"𝠞𝪜","れ":"𝣜𝪜","ろ":"𝠐𝪛",
-        "わ":"𝢆𝪜","ゎ":"𝥥𝪤\n𝢆𝪜","ゐ":"𝥥𝪤\n𝢒𝪜","ゑ":"𝥥𝪤\n𝡦𝪜","を":"𝥥𝪤\n𝡶𝪛","ん":"𝦢𝪤\n𝠀𝪞",
-        "が":"𝡀𝪜𝥥𝪦","ぎ":"𝣮𝪜𝪦𝥥𝪦","ぐ":"𝡝𝪢𝥥𝪦","げ":"𝡇𝪜𝥥𝪦","ご":"𝢀𝪛𝥥𝪦",
-        "ざ":"𝤃𝪜𝥥𝪦","じ":"𝠞𝪢𝥥𝪦","ず":"𝠞𝪤𝥥𝪦","ぜ":"𝣆𝪜𝥥𝪦","ぞ":"𝠀𝪞𝥥𝪦",
-        "だ":"𝣷𝪞𝥥𝪦","ぢ":"𝢖𝪜𝥥𝪦","づ":"𝢳𝪜𝥥𝪦","で":"𝡌𝪜𝥥𝪦","ど":"𝠕𝥥𝪦",
-        "ば":"𝠕𝪞𝥥𝪦","び":"𝠀𝪜𝥥𝪦","ぶ":"𝣰𝪟𝪡𝥥𝪦","べ":"𝢚𝪟𝥥𝪦","ぼ":"𝢀𝪝𝥥𝪦",
-        "ぱ":"𝤪\n𝠕𝪞","ぴ":"𝤪\n𝠀𝪜","ぷ":"𝤪\n𝣰𝪟𝪡","ぺ":"𝤪\n𝢚𝪟","ぽ":"𝤪\n𝢀𝪝",
-        "ー":"𝥥𝪤",
-        "0":"𝠊𝪛","1":"𝠀𝪜","2":"𝠎𝪜","3":"𝢆𝪜","4":"𝡄𝪜","5":"𝣷𝪜","6":"𝣜𝪢","7":"𝠞𝪢","8":"𝢎𝪢","9":"𝡝𝪢"
-    },
     libras: {
-        A:"𝣷𝪜", B:"𝡇𝪜", C:"𝡭𝪜", "Ç":"𝡭𝪜\n𝧢𝪝", D:"𝠁𝪜", E:"𝡊𝪜", 
-        F:"𝣒𝪜", G:"𝣟𝪜", H:"𝧟\n𝡀𝪜𝪧", I:"𝢒𝪜", J:"𝢒𝪟\n𝦢𝪬", 
-        K:"𝤮\n𝡀𝪜", L:"𝣜𝪜", M:"𝢍𝪜", N:"𝠙𝪜", O:"𝡶𝪜", P:"𝡀𝪟", 
-        Q:"𝣲𝪟", R:"𝠚𝪜", S:"𝤃𝪜", T:"𝣓𝪜", U:"𝠕𝪜", V:"𝠎𝪜", 
+        A:"𝣷𝪜", B:"𝡇𝪜", C:"𝡭𝪜", "Ç":"𝡭𝪜\n𝧢𝪝", D:"𝠁𝪜", E:"𝡊𝪜",
+        F:"𝣒𝪜", G:"𝣟𝪜", H:"𝧟\n𝡀𝪜𝪧", I:"𝢒𝪜", J:"𝢒𝪟\n𝦢𝪬",
+        K:"𝤮\n𝡀𝪜", L:"𝣜𝪜", M:"𝢍𝪜", N:"𝠙𝪜", O:"𝡶𝪜", P:"𝡀𝪟",
+        Q:"𝣲𝪟", R:"𝠚𝪜", S:"𝤃𝪜", T:"𝣓𝪜", U:"𝠕𝪜", V:"𝠎𝪜",
         W:"𝢇𝪜", X:"𝠊𝪟\n𝥥𝪤", Y:"𝢚𝪜", Z:THIN+"𝥅𝪪\n𝠀𝪜",
-        // Libras Numbers
-        "0":"𝡶𝪜", "1":"𝠀", "2":"𝠎", "3":"𝢆", "4":"𝡄", 
+        "0":"𝡶𝪜", "1":"𝠀", "2":"𝠎", "3":"𝢆", "4":"𝡄",
         "5":"𝠐𝪨", "6":"𝡵𝪝𝪮", "7":"𝢃𝪛", "8":"𝧢𝪝\n𝤃𝪛", "9":"𝡵𝪟𝪢"
     }
 };
 
-let CURRENT = DICTS.asl;
+// ─── JSL dictionary (array-based, matching Python Sign = List[str]) ───
+const JSL_DICT = {
+    "あ":["𝣷𝪜"],"ぁ":["𝥥𝪤","𝣷𝪜"],"い":["𝢒𝪜"],"ぃ":["𝥥𝪤","𝢒𝪜"],
+    "う":["𝠕𝪜"],"ぅ":["𝥥𝪤","𝠕𝪜"],"え":["𝡦𝪜"],"ぇ":["𝥥𝪤","𝡦𝪜"],
+    "お":["𝡶𝪛"],"ぉ":["𝥥𝪤","𝡶𝪛"],"か":["𝡀𝪜"],"ゕ":["𝥥𝪤","𝡀𝪜"],
+    "き":["𝣮𝪜𝪦"],"く":["𝡝𝪢"],"け":["𝡇𝪜"],"ゖ":["𝥥𝪤","𝡇𝪜"],
+    "こ":["𝢀𝪛"],"さ":["𝤃𝪜"],"し":["𝠞𝪢"],"す":["𝠞𝪤"],"せ":["𝣆𝪜"],"そ":["𝠀𝪞"],
+    "た":["𝣷𝪞"],"ち":["𝢖𝪜"],"つ":["𝢳𝪜"],"っ":["𝥥𝪤","𝢳𝪜"],
+    "て":["𝡌𝪜"],"と":["𝠕"],"な":["𝠎𝪤"],"に":["𝠎𝪢"],"ぬ":["𝠆𝪛"],"ね":["𝡌𝪤"],"の":["𝤪𝪣","𝠀𝪛"],
+    "は":["𝠕𝪞"],"ひ":["𝠀𝪜"],"ふ":["𝣰𝪟𝪡"],"へ":["𝢚𝪟"],"ほ":["𝢀𝪝"],
+    "ま":["𝢌𝪤"],"み":["𝢌𝪢"],"む":["𝣜𝪢"],"め":["𝣎𝪜"],"も":["𝤪𝪤","𝤜𝣴𝪝𝪦"],
+    "や":["𝢚𝪜"],"ゃ":["𝥥𝪤","𝢚𝪜"],"ゆ":["𝢌"],"ゅ":["𝥥𝪤","𝢌"],
+    "よ":["𝡄𝪢"],"ょ":["𝥥𝪤","𝡄𝪢"],"ら":["𝠚𝪜"],"り":["𝦢𝪬","𝠎𝪞"],"る":["𝠞𝪜"],"れ":["𝣜𝪜"],"ろ":["𝠐𝪛"],
+    "わ":["𝢆𝪜"],"ゎ":["𝥥𝪤","𝢆𝪜"],"ゐ":["𝥥𝪤","𝢒𝪜"],"ゑ":["𝥥𝪤","𝡦𝪜"],"を":["𝥥𝪤","𝡶𝪛"],
+    "ん":["𝦢𝪤","𝠀𝪞"],
+    "が":["𝡀𝪜𝥥𝪦"],"ぎ":["𝣮𝪜𝪦𝥥𝪦"],"ぐ":["𝡝𝪢𝥥𝪦"],"げ":["𝡇𝪜𝥥𝪦"],"ご":["𝢀𝪛𝥥𝪦"],
+    "ざ":["𝤃𝪜𝥥𝪦"],"じ":["𝠞𝪢𝥥𝪦"],"ず":["𝠞𝪤𝥥𝪦"],"ぜ":["𝣆𝪜𝥥𝪦"],"ぞ":["𝠀𝪞𝥥𝪦"],
+    "だ":["𝣷𝪞𝥥𝪦"],"ぢ":["𝢖𝪜𝥥𝪦"],"づ":["𝢳𝪜𝥥𝪦"],"で":["𝡌𝪜𝥥𝪦"],"ど":["𝠕𝥥𝪦"],
+    "ば":["𝠕𝪞𝥥𝪦"],"び":["𝠀𝪜𝥥𝪦"],"ぶ":["𝣰𝪟𝪡𝥥𝪦"],"べ":["𝢚𝪟𝥥𝪦"],"ぼ":["𝢀𝪝𝥥𝪦"],
+    "ぱ":["𝤪","𝠕𝪞"],"ぴ":["𝤪","𝠀𝪜"],"ぷ":["𝤪","𝣰𝪟𝪡"],"ぺ":["𝤪","𝢚𝪟"],"ぽ":["𝤪","𝢀𝪝"],
+    "ゔ":["𝠕𝪜𝥥𝪦"],
+    "゛":["𝥥𝪦"],
+    "゜":["𝤪"],
+    "ー":["𝥥𝪤"],
+    " ":[NBSP],
+    "　":[NBSP],  // fullwidth space
+    "0":["𝠊𝪛"],"1":["𝠀𝪜"],"2":["𝠎𝪜"],"3":["𝢆𝪜"],"4":["𝡄𝪜"],
+    "5":["𝣷𝪜"],"6":["𝣜𝪢"],"7":["𝠞𝪢"],"8":["𝢎𝪢"],"9":["𝡝𝪢"]
+};
+
+const JSL_DIGRAPH = {
+    "きゃ":["𝣮𝪜𝪦","𝥥𝪤","𝢚𝪜"],"きゅ":["𝣮𝪜𝪦","𝥥𝪤","𝢌"],"きょ":["𝣮𝪜𝪦","𝥥𝪤","𝡄𝪢"],
+    "しゃ":["𝠞𝪢","𝥥𝪤","𝢚𝪜"],"しゅ":["𝠞𝪢","𝥥𝪤","𝢌"],"しょ":["𝠞𝪢","𝥥𝪤","𝡄𝪢"],
+    "ちゃ":["𝢖𝪜","𝥥𝪤","𝢚𝪜"],"ちゅ":["𝢖𝪜","𝥥𝪤","𝢌"],"ちょ":["𝢖𝪜","𝥥𝪤","𝡄𝪢"],
+    "にゃ":["𝠎𝪢","𝥥𝪤","𝢚𝪜"],"にゅ":["𝠎𝪢","𝥥𝪤","𝢌"],"にょ":["𝠎𝪢","𝥥𝪤","𝡄𝪢"],
+    "ひゃ":["𝠀𝪜","𝥥𝪤","𝢚𝪜"],"ひゅ":["𝠀𝪜","𝥥𝪤","𝢌"],"ひょ":["𝠀𝪜","𝥥𝪤","𝡄𝪢"],
+    "みゃ":["𝢌𝪢","𝥥𝪤","𝢚𝪜"],"みゅ":["𝢌𝪢","𝥥𝪤","𝢌"],"みょ":["𝢌𝪢","𝥥𝪤","𝡄𝪢"],
+    "りゃ":["𝦢𝪬","𝠎𝪞","𝥥𝪤","𝢚𝪜"],"りゅ":["𝦢𝪬","𝠎𝪞","𝥥𝪤","𝢌"],"りょ":["𝦢𝪬","𝠎𝪞","𝥥𝪤","𝡄𝪢"],
+    "ぎゃ":["𝣮𝪜𝪦𝥥𝪦","𝥥𝪤","𝢚𝪜"],"ぎゅ":["𝣮𝪜𝪦𝥥𝪦","𝥥𝪤","𝢌"],"ぎょ":["𝣮𝪜𝪦𝥥𝪦","𝥥𝪤","𝡄𝪢"],
+    "じゃ":["𝠞𝪢𝥥𝪦","𝥥𝪤","𝢚𝪜"],"じゅ":["𝠞𝪢𝥥𝪦","𝥥𝪤","𝢌"],"じょ":["𝠞𝪢𝥥𝪦","𝥥𝪤","𝡄𝪢"],
+    "ぢゃ":["𝢖𝪜𝥥𝪦","𝥥𝪤","𝢚𝪜"],"ぢゅ":["𝢖𝪜𝥥𝪦","𝥥𝪤","𝢌"],"ぢょ":["𝢖𝪜𝥥𝪦","𝥥𝪤","𝡄𝪢"],
+    "びゃ":["𝠀𝪜𝥥𝪦","𝥥𝪤","𝢚𝪜"],"びゅ":["𝠀𝪜𝥥𝪦","𝥥𝪤","𝢌"],"びょ":["𝠀𝪜𝥥𝪦","𝥥𝪤","𝡄𝪢"],
+    "ぴゃ":["𝤪","𝠀𝪜","𝥥𝪤","𝢚𝪜"],"ぴゅ":["𝤪","𝠀𝪜","𝥥𝪤","𝢌"],"ぴょ":["𝤪","𝠀𝪜","𝥥𝪤","𝡄𝪢"]
+};
+
+// ─── State ───
 let LANG_CODE = "asl";
 
 const VERTICAL = { ".":"𝪈",",":"𝪇",":":"𝪊",";":"𝪉","(":"𝪋",")":"𝪋𝪤" };
 
-function setLanguage(l) { 
-    LANG_CODE = l;
-    CURRENT = DICTS[l] || DICTS.asl; 
-    render("horizontal"); 
-}
-
-function textToFingerspell(text, mode) {
-    if (!text.trim()) return "";
-
-    text = text.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    
-    // Tokenize for JSL digraphs
-    let tokens = [];
-    let i = 0;
+// ─── JSL tokenizer (matches Python tokenize_jap) ───
+function tokenizeJSL(text) {
+    const tokens = [];
     const chars = Array.from(text);
+    let i = 0;
     while (i < chars.length) {
-        let pair = chars[i] + (chars[i+1] || "");
-        if (CURRENT[pair] && pair.length > 1) {
-            tokens.push(CURRENT[pair]);
+        const pair = chars[i] + (chars[i + 1] || "");
+        if (pair.length === 2 && JSL_DIGRAPH[pair]) {
+            tokens.push(JSL_DIGRAPH[pair]);
             i += 2;
         } else {
-            let char = chars[i];
-            let lookup = CURRENT[char] || CURRENT[char.toUpperCase()] || char;
-            tokens.push(lookup);
+            tokens.push(JSL_DICT[chars[i]] || [chars[i]]);
             i += 1;
         }
     }
+    return tokens;
+}
 
-    if (mode === "vertical") {
-        return tokens.map(t => {
-            if (Array.isArray(t)) return t.join("\n");
-            let val = VERTICAL[t] || t;
-            return val.replace(/\n/g, "\n"); // already handled
-        }).join("\n\n");
+// ─── JSL horizontal (matches Python jap_to_jsl_h) ───
+function jslHorizontal(text) {
+    const tokens = tokenizeJSL(text);
+    if (tokens.length === 0) return "";
+    const h = Math.max(...tokens.map(t => t.length));
+    const lanes = Array.from({length: h}, () => []);
+    for (const t of tokens) {
+        // Bottom-align: pad top with empty strings
+        const padded = Array(h - t.length).fill("").concat(t);
+        for (let i = 0; i < h; i++) {
+            lanes[i].push(padded[i] || NBSP);
+        }
     }
+    return lanes.map(lane => lane.join(SEP)).join("\n");
+}
 
-    // Horizontal logic
-    // We normalize everything to an array of components
-    const processed = tokens.map(t => {
-        if (Array.isArray(t)) return t;
-        return typeof t === "string" ? t.split("\n") : [t];
+// ─── JSL vertical (matches Python jap_to_jsl_v) ───
+function jslVertical(text) {
+    // Split on spaces (regular and fullwidth)
+    const words = text.split(/[ 　]+/).filter(w => w.length > 0);
+    const wordBlocks = [];
+    for (const word of words) {
+        const tokens = tokenizeJSL(word);
+        wordBlocks.push(tokens.map(t => t.join("\n")).join("\n\n"));
+    }
+    return wordBlocks.join("\n\n\n");
+}
+
+// ─── ASL/LIBRAS tokenizer ───
+function tokenizeStr(text, dict) {
+    const chars = Array.from(text);
+    return chars.map(ch => {
+        const lookup = dict[ch] || dict[ch.toUpperCase()] || ch;
+        return typeof lookup === "string" ? lookup.split("\n") : [lookup];
     });
+}
 
-    const maxLines = Math.max(...processed.map(p => p.length));
-    let grid = Array(maxLines).fill("");
-
-    for (const parts of processed) {
+// ─── ASL/LIBRAS horizontal ───
+function strHorizontal(text, dict) {
+    const tokens = tokenizeStr(text, dict);
+    if (tokens.length === 0) return "";
+    const maxLines = Math.max(...tokens.map(t => t.length));
+    const grid = Array.from({length: maxLines}, () => "");
+    for (const parts of tokens) {
         const diff = maxLines - parts.length;
-        // Top-align or Bottom-align? Your Python code used top padding.
-        // Let's match the existing ASL 'bottom-heavy' style.
         for (let j = 0; j < maxLines; j++) {
-            let segment = "";
-            if (j < diff) {
-                segment = NBSP; // padding
-            } else {
-                segment = parts[j - diff];
-            }
-            grid[j] += segment;
+            grid[j] += (j < diff) ? NBSP : parts[j - diff];
         }
     }
     return grid.join("\n");
 }
 
+// ─── ASL/LIBRAS vertical ───
+function strVertical(text, dict) {
+    const tokens = tokenizeStr(text, dict);
+    return tokens.map(t => {
+        return t.map(component => {
+            return VERTICAL[component] || component;
+        }).join("\n");
+    }).join("\n\n");
+}
+
+// ─── Main render ───
+function textToFingerspell(text, mode) {
+    if (!text.trim()) return "";
+
+    if (LANG_CODE === "jsl") {
+        return mode === "vertical" ? jslVertical(text) : jslHorizontal(text);
+    }
+
+    // ASL / LIBRAS
+    const dict = DICTS_STR[LANG_CODE] || DICTS_STR.asl;
+    // Strip accents for LIBRAS
+    text = text.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+    return mode === "vertical" ? strVertical(text, dict) : strHorizontal(text, dict);
+}
+
 function render(mode) {
-    const out = [], lines = inputText.value.split("\n");
+    const out = [];
+    const lines = inputText.value.split("\n");
     for (const l of lines) {
         const r = textToFingerspell(l, mode);
         if (r) out.push(r);
     }
     output.value = out.join("\n\n");
+}
+
+function setLanguage(l) {
+    LANG_CODE = l;
+    render("horizontal");
 }
 
 function toggleLang() {
